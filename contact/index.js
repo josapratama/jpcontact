@@ -19,9 +19,11 @@ function initDetailPage() {
   const emailElement = document.getElementById("email");
   const numberPhoneElement = document.getElementById("number-phone");
   const birthDayElement = document.getElementById("birth-day");
+  const avatarImg = document.querySelector("#contact-container img");
   const buttonEdit = document.getElementById("button-edit");
   const buttonDelete = document.getElementById("button-delete");
 
+  if (avatarImg) avatarImg.src = getInitialAvatar(contact.fullName);
   if (fullNameElement) fullNameElement.innerText = contact.fullName || "-";
   if (emailElement) emailElement.innerText = contact.email || "-";
   if (numberPhoneElement) numberPhoneElement.innerText = contact.phoneNumber || "-";

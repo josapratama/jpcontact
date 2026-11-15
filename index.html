@@ -3,86 +3,158 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JP Contact</title>
-    <meta name="description" content="Customer Relationship Management" />
+    <title>JP Contact - Management System</title>
+    <meta name="description" content="Contact Management System with Export/Import and Live Filtering" />
     <meta name="author" content="Josa Pratama" />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="flex h-screen">
-      <nav class="flex-col w-1/5 bg-slate-900 text-white">
-        <div class="flex justify-center py-4">
-          <h2 class="text-2xl tracking-widest font-semibold">JP Contacts</h2>
+  <body class="bg-slate-50 text-slate-900 font-sans">
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <nav class="flex flex-col w-64 bg-slate-900 text-white shrink-0 justify-between p-4">
+        <div>
+          <div class="flex items-center gap-3 py-4 px-2 mb-4 border-b border-slate-800">
+            <span class="text-2xl">📇</span>
+            <h2 class="text-xl font-bold tracking-wide">JP Contacts</h2>
+          </div>
+
+          <div class="mb-6">
+            <a
+              href="/contact/add.html"
+              class="w-full py-2.5 px-4 bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 font-medium shadow transition"
+            >
+              <img src="/img/plus.svg" alt="Add" class="w-5 h-5 invert" />
+              <span>Tambah Kontak</span>
+            </a>
+          </div>
+
+          <div class="mb-6">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Menu Utama</p>
+            <ul class="space-y-1">
+              <li>
+                <button
+                  onclick="filterByLabel('')"
+                  id="nav-all"
+                  class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 flex items-center justify-between transition bg-slate-800 text-blue-400"
+                >
+                  <span>Semua Kontak</span>
+                  <span id="badge-all-count" class="text-xs bg-slate-700 px-2 py-0.5 rounded-full">0</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Kategori Label</p>
+            <ul class="space-y-1" id="label-filters">
+              <li>
+                <button onclick="filterByLabel('Work')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 flex items-center justify-between text-slate-300 transition">
+                  <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Work</span>
+                </button>
+              </li>
+              <li>
+                <button onclick="filterByLabel('Family')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 flex items-center justify-between text-slate-300 transition">
+                  <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Family</span>
+                </button>
+              </li>
+              <li>
+                <button onclick="filterByLabel('Friend')" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 flex items-center justify-between text-slate-300 transition">
+                  <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Friend</span>
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-        <div class="flex mx-4">
-          <a
-            href="/contact/add.html"
-            class="px-8 py-3 mb-6 bg-gray-500 rounded-lg hover:bg-gray-700 flex items-center"
-          >
-            <img src="/img/plus.svg" alt="Add Contact" class="w-6" />
-            <p class="text-base pl-2">Add Contact</p>
-          </a>
-        </div>
-        <ul class="flex flex-col mx-4 pb-4">
-          <li
-            class="text-xl w-full cursor-pointer pl-4 hover:bg-white hover:text-black rounded-xl py-2"
-          >
-            <a href="/">Contacts</a>
-          </li>
-          <li
-            class="text-xl w-full pl-4 cursor-pointer hover:bg-white hover:text-black rounded-xl py-2"
-          >
-            <a href="#">Trash</a>
-          </li>
-        </ul>
-        <div class="flex mx-4 justify-between px-4 items-center">
-          <h3 class="font-semibold text-xl">Label</h3>
-          <img src="/img/plus.svg" alt="Label" class="w-6 cursor-pointer" />
+
+        <!-- Backup & Actions in Sidebar -->
+        <div class="pt-4 border-t border-slate-800 space-y-2">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">Data & Backup</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              onclick="exportContactsToJSON()"
+              class="text-xs py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium text-center transition"
+            >
+              Export JSON
+            </button>
+            <button
+              onclick="exportContactsToCSV()"
+              class="text-xs py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium text-center transition"
+            >
+              Export CSV
+            </button>
+          </div>
+          <label class="block text-xs py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-medium text-center cursor-pointer transition">
+            Import Kontak (JSON)
+            <input type="file" id="import-file-input" accept=".json" class="hidden" />
+          </label>
         </div>
       </nav>
-      <div class="w-full">
-        <header class="pt-2 pb-8 px-4 flex justify-between">
-          <div>
-            <form id="search-contacts">
+
+      <!-- Main Content Area -->
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 py-3.5 px-6 flex items-center justify-between shadow-sm">
+          <div class="flex-1 max-w-md">
+            <div class="relative">
               <input
                 type="text"
-                name="q"
                 id="search-input"
-                placeholder="Seacrh Keyword"
-                class="py-3 px-3 border-2"
+                placeholder="Cari nama, email, nomor telepon..."
+                class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
-              <button
-                type="submit"
-                class="py-3 px-8 bg-slate-500 rounded-lg ml-3 text-white"
-              >
-                Search
-              </button>
-            </form>
+              <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+            </div>
           </div>
-          <div class="flex items-center">
-            <img src="/img/user.svg" alt="Josa Pratama" class="w-12 h-12" />
-            <h2 class="text-lg font-semibold ml-2">Josa Pratama</h2>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-blue-700 text-white font-bold flex items-center justify-center text-sm shadow">
+              JP
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-slate-800 leading-none">Josa Pratama</p>
+              <p class="text-xs text-slate-500 mt-0.5">Admin</p>
+            </div>
           </div>
         </header>
 
-        <main class="w-full px-4">
-          <h2 class="text-3xl py-3 font-semibold">Contact <sub>(3)</sub></h2>
-          <table class="w-full text-left table-auto">
-            <thead class="border-b-2">
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone Number</th>
-              <th>Label</th>
-              <th>Birthday</th>
-            </thead>
-            <tbody id="contacts-container"></tbody>
-          </table>
-        </main>
+        <!-- Main Workspace -->
+        <main class="flex-1 overflow-y-auto p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <span id="view-title">Daftar Kontak</span>
+                <span id="contact-count-badge" class="text-sm font-normal px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full">0 kontak</span>
+              </h2>
+            </div>
+            <div id="filter-indicator" class="hidden">
+              <button onclick="filterByLabel('')" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1 rounded-full font-medium transition">
+                Reset Filter ✕
+              </button>
+            </div>
+          </div>
 
-        <section></section>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <th class="py-3 px-4">Nama Lengkap</th>
+                  <th class="py-3 px-4">Email</th>
+                  <th class="py-3 px-4">Nomor Telepon</th>
+                  <th class="py-3 px-4">Kategori</th>
+                  <th class="py-3 px-4">Tanggal Lahir</th>
+                  <th class="py-3 px-4 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="contacts-container" class="divide-y divide-slate-100 text-sm">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </main>
       </div>
     </div>
-    <script src="storage.js"></script>
-    <script src="index.js"></script>
+
+    <script src="/storage.js"></script>
+    <script src="/index.js"></script>
   </body>
 </html>
