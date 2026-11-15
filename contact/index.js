@@ -1,101 +1,130 @@
-const contactContainerElement = document.getElementById("contact-container");
-const addContactFormElement = document.getElementById("add-contact-form");
-const buttonDelete = document.getElementById("button-delete");
-const buttonEdit = document.getElementById("button-edit");
-const fullNameElement = document.getElementById("full-name");
-const emailElement = document.getElementById("email");
-const numberPhoneElement = document.getElementById("number-phone");
-const birthDayElement = document.getElementById("birth-day");
-
 function getContactId() {
   const queryString = window.location.search;
   const params = new URLSearchParams(queryString);
-  const id = Number(params.get("id"));
-  return id;
+  return Number(params.get("id"));
 }
 
-function renderContactById() {
+function initDetailPage() {
   const id = getContactId();
+  if (!id) return;
+
   const contact = loadContactById(id);
+  if (!contact) {
+    alert("Kontak tidak ditemukan!");
+    window.location.replace("/");
+    return;
+  }
 
-  buttonEdit.setAttribute("href", `renderEditContactFormById(${id})`);
-  buttonDelete.setAttribute("onclick", `deleteContactById(${id})`);
-  fullNameElement.innerText = `${contact.fullName}`;
-  emailElement.innerText = `${contact.email}`;
-  numberPhoneElement.innerText = `${contact.numberPhone}`;
-  birthDayElement.innerText = `${contact.birthDay}`;
+  const fullNameElement = document.getElementById("full-name");
+  const emailElement = document.getElementById("email");
+  const numberPhoneElement = document.getElementById("number-phone");
+  const birthDayElement = document.getElementById("birth-day");
+  const buttonEdit = document.getElementById("button-edit");
+  const buttonDelete = document.getElementById("button-delete");
+
+  if (fullNameElement) fullNameElement.innerText = contact.fullName || "-";
+  if (emailElement) emailElement.innerText = contact.email || "-";
+  if (numberPhoneElement) numberPhoneElement.innerText = contact.phoneNumber || "-";
+  if (birthDayElement) birthDayElement.innerText = contact.birthDay || "-";
+
+  if (buttonEdit) {
+    buttonEdit.setAttribute("href", `/contact/edit.html?id=${id}`);
+  }
+
+  if (buttonDelete) {
+    buttonDelete.onclick = function () {
+      if (confirm(`Apakah Anda yakin ingin menghapus kontak "${contact.fullName}"?`)) {
+        deleteContactById(id);
+      }
+    };
+  }
 }
 
-function addContact(event) {
-  event.preventDefault();
-  const contactFormData = new FormData(addContactFormElement);
-  const contacts = loadContactsFromLocalStorage();
-  const newId = contacts.length ? contacts[contacts.length - 1].id + 1 : 1;
-  const newContact = {
-    id: newId,
-    avatar: "/img/user.svg",
-    fullName: contactFormData.get("fullName"),
-    email: contactFormData.get("email"),
-    phoneNumber: contactFormData.get("phoneNumber"),
-    label: null,
-    birthDay: contactFormData.get("birthDay"),
-  };
+function initAddPage() {
+  const addForm = document.getElementById("add-contact-form");
+  if (!addForm) return;
 
-  const updatedContact = [...contacts, newContact];
-  saveContactsToLocalStorage(updatedContact);
-  addContactFormElement.reset();
-  window.location.replace("/");
-}
+  addForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(addForm);
+    const contacts = loadContactsFromLocalStorage();
+    const newId = contacts.length > 0 ? Math.max(...contacts.map((c) => c.id)) + 1 : 1;
 
-function renderEditContactFormById(id) {
-  const contact = loadContactById(id);
+    const newContact = {
+      id: newId,
+      avatar: "/img/user.svg",
+      fullName: formData.get("fullName"),
+      email: formData.get("email"),
+      phoneNumber: formData.get("phoneNumber"),
+      label: "General",
+      birthDay: formData.get("birthDay"),
+    };
 
-  fullNameElement.setAttribute("value", `${contact.fullName}`);
-  emailElement.setAttribute("value", `${contact.email}`);
-  numberPhoneElement.setAttribute("value", `${contact.numberPhone}`);
-  birthDayElement.setAttribute("value", `${contact.birthDay}`);
-
-  // const editContactFormElement = document.getElementById("edit-contact-form");
-
-  // editContactFormElement.addEventListener("submit", editContact);
-}
-
-function editContact(event) {
-  event.preventDefault();
-  const contactFormData = new FormData(event.target);
-
-  const contacts = loadContacts();
-
-  const newContact = {
-    id: getContactId(),
-    fullName: contactFormData.get("fullName"),
-    email: contactFormData.get("email"),
-    phone: contactFormData.get("phone"),
-    age: Number(contactFormData.get("birthDay")),
-  };
-
-  const updatedContacts = contacts.map((contact) => {
-    if (contact.id === newContact.id) {
-      return newContact;
-    } else {
-      return contact;
-    }
+    contacts.push(newContact);
+    saveContactsToLocalStorage(contacts);
+    window.location.replace("/");
   });
+}
 
-  saveContacts(updatedContacts);
-  renderContactById();
+function initEditPage() {
+  const editForm = document.getElementById("edit-contact-form");
+  if (!editForm) return;
+
+  const id = getContactId();
+  if (!id) {
+    window.location.replace("/");
+    return;
+  }
+
+  const contact = loadContactById(id);
+  if (!contact) {
+    alert("Kontak tidak ditemukan!");
+    window.location.replace("/");
+    return;
+  }
+
+  const fullNameInput = document.getElementById("fullName");
+  const emailInput = document.getElementById("email");
+  const phoneInput = document.getElementById("phoneNumber");
+  const birthdayInput = document.getElementById("birthDay");
+
+  if (fullNameInput) fullNameInput.value = contact.fullName || "";
+  if (emailInput) emailInput.value = contact.email || "";
+  if (phoneInput) phoneInput.value = contact.phoneNumber || "";
+  if (birthdayInput) birthdayInput.value = contact.birthDay || "";
+
+  editForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const formData = new FormData(editForm);
+    const contacts = loadContactsFromLocalStorage();
+
+    const updated = contacts.map((c) => {
+      if (Number(c.id) === Number(id)) {
+        return {
+          ...c,
+          fullName: formData.get("fullName"),
+          email: formData.get("email"),
+          phoneNumber: formData.get("phoneNumber"),
+          birthDay: formData.get("birthDay"),
+        };
+      }
+      return c;
+    });
+
+    saveContactsToLocalStorage(updated);
+    window.location.replace(`/contact/?id=${id}`);
+  });
 }
 
 function deleteContactById(id) {
   const contacts = loadContactsFromLocalStorage();
-  const updatedContacts = contacts.filter(
-    (contact) => contact.id !== Number(id)
-  );
-
+  const updatedContacts = contacts.filter((c) => Number(c.id) !== Number(id));
   saveContactsToLocalStorage(updatedContacts);
   window.location.replace("/");
 }
 
-window.addEventListener("load", renderContactById);
-
-addContactFormElement.addEventListener("submit", addContact);
+window.addEventListener("DOMContentLoaded", function () {
+  initDetailPage();
+  initAddPage();
+  initEditPage();
+});
